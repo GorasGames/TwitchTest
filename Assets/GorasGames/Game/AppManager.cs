@@ -1,20 +1,28 @@
 using GorasGames.Core.System;
 using GorasGames.Game.TwitchAPI;
+using System.Threading;
 
 namespace GorasGames.Game
 {
     public class AppManager : MonoSingleton<AppManager>
     {
+        TwitchUserDatas _userDatas;
+        CancellationTokenSource _cancelTokenSource;
+
         // Start is called before the first frame update
-        void Start()
+        async void Start()
         {
-            TwitchAPIAuth.Instance.Init();
+            _cancelTokenSource = new CancellationTokenSource();
+            TwitchAPIAuth.Instance.InitAsync(_cancelTokenSource);
+
+            _userDatas = await TwitchAPIRequest.Instance.GetUserDatasAsync(_cancelTokenSource);
         }
 
-        // Update is called once per frame
-        void Update()
+        private new void OnApplicationQuit()
         {
-
+            if (_cancelTokenSource != null)
+                _cancelTokenSource.Cancel();
+            base.OnApplicationQuit();
         }
     }
 }

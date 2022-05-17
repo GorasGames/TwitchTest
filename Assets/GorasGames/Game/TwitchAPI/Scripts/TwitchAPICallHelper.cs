@@ -21,6 +21,7 @@ namespace GorasGames.Game.TwitchAPI
 
         public string TwitchAuthToken
         {
+            get { return _twitchAuthToken; }
             set { _twitchAuthToken = value; }
         }
 

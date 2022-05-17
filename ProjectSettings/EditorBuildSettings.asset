@@ -4,9 +4,6 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes:
-  - enabled: 1
-    path: Assets/GorasGames/App.unity
-    guid: 13ce12ff8bd98074db7ca5b9e7cf00ba
+  m_Scenes: []
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 6c56168229463b248b24a3f28ba5a201, type: 2}

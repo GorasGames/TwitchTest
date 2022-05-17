@@ -19,7 +19,7 @@ namespace GorasGames.Game.TwitchAPI
         public string paramAppClientId;
         public string paramAppClientSecret;
         public string paramRedirectUri;
-        public string paramAuthorizationCode;
+        public string paramGetTokenGrantType;
 
         public string[] scopes = new string[]
         {
@@ -40,5 +40,4 @@ namespace GorasGames.Game.TwitchAPI
         public string endPoint;
         public string paramsFormat;
     }
-
 }

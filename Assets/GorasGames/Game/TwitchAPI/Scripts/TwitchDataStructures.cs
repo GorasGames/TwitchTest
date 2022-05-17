@@ -45,4 +45,20 @@ namespace GorasGames.Game.TwitchAPI
     {
         public string error;
     }
+
+    [Serializable]
+    public class TwitchUserDatas
+    {
+        public string broadcaster_type;
+        public string description;
+        public string display_name;
+        public string id;
+        public string login;
+        public string offline_image_url;
+        public string profile_image_url;
+        public string type;
+        public int view_count;
+        public string email;
+        public string created_at;
+    }
 }

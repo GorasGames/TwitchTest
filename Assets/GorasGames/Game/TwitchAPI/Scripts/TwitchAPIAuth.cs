@@ -37,18 +37,29 @@ namespace GorasGames.Game.TwitchAPI
 
         #region Init
 
-        public async void Init()
+        public async void InitAsync(CancellationTokenSource pCancellationToken)
         {
             Debug.Log("[TwitchAPIAuth] Start");
-            _cancelTokenSource = new CancellationTokenSource();
-            _twitchAuthParams = await LoadTwitchParams();
+            _cancelTokenSource = pCancellationToken;
+            _twitchAuthParams = await LoadTwitchAuthParamsAsync();
             if (_twitchAuthParams == null)
             {
                 Debug.LogError("[TwitchAPIAuth] Unable to get twitch params");
                 return;
             }
-            if (_isInit)
-                InitTwitchAuth();
+
+            TwitchAPICallHelper.Instance.TwitchClientId = _twitchAuthParams.paramAppClientId;
+
+            _authState = ((Int64)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds).ToString();
+            Debug.Log("[TwitchAPIAuth] Auth state : " + _authState);
+            StartLocalWebserver();
+            string scopes = String.Join("+", _twitchAuthParams.scopes);
+
+            string formatedAuthUrl = _twitchAuthParams.authorizeRequest.endPoint + String.Format(_twitchAuthParams.authorizeRequest.paramsFormat, _twitchAuthParams.paramAppClientId, _twitchAuthParams.paramRedirectUri, scopes, _authState);
+
+            Application.OpenURL(formatedAuthUrl);
+
+
         }
         #endregion
 
@@ -57,7 +68,7 @@ namespace GorasGames.Game.TwitchAPI
         /// Load the Twitch Parameters asset
         /// </summary>
         /// <returns></returns>
-        private async Task<TwitchAuthParameters> LoadTwitchParams()
+        private async Task<TwitchAuthParameters> LoadTwitchAuthParamsAsync()
         {
             _assetLoader = Addressables.LoadAssetAsync<TwitchAuthParameters>("TwitchAuthParams");
             _twitchAuthParams = await _assetLoader.Task;
@@ -77,22 +88,6 @@ namespace GorasGames.Game.TwitchAPI
         #endregion
 
         #region OAuth
-        private void InitTwitchAuth()
-        {
-
-            // make sure our API helper knows our client ID (it needed for the HTTP headers)
-            TwitchAPICallHelper.Instance.TwitchClientId = _twitchAuthParams.paramAppClientId;
-
-            _authState = ((Int64)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds).ToString();
-            Debug.Log("[TwitchAPIAuth] Auth state : " + _authState);
-            StartLocalWebserver();
-            string scopes = String.Join("+", _twitchAuthParams.scopes);
-            Debug.Log("Scopes : " + scopes);
-            string formatedAuthUrl = _twitchAuthParams.authorizeRequest.endPoint + String.Format(_twitchAuthParams.authorizeRequest.paramsFormat, _twitchAuthParams.paramAppClientId, _twitchAuthParams.paramRedirectUri, scopes, _authState);
-            Debug.Log("Url opened = " + formatedAuthUrl);
-            Application.OpenURL(formatedAuthUrl);
-        }
-
         /// <summary>
         /// Opens a simple "webserver" like thing on localhost:8080 for the auth redirect to land on.
         /// Based on the C# HttpListener docs: https://docs.microsoft.com/en-us/dotnet/api/system.net.httplistener
@@ -130,7 +125,7 @@ namespace GorasGames.Game.TwitchAPI
             {
                 // if all checks out, use the code to exchange it for the actual auth token at the API
                 Debug.Log("[TwitchAPIAuth] State valid");
-                GetTokenFromCode(code);
+                GetTokenAsync(code);
             }
 
             // Send web response to the user
@@ -155,10 +150,10 @@ namespace GorasGames.Game.TwitchAPI
         /// Makes the API call to exchange the received code for the actual auth token
         /// </summary>
         /// <param name="code">The code parameter received in the callback HTTP reuqest</param>
-        private async void GetTokenFromCode(string code)
+        private async void GetTokenAsync(string code)
         {
             Debug.Log("Get token from code");
-            string postUrl = _twitchAuthParams.getTokenRequest.endPoint + String.Format(_twitchAuthParams.getTokenRequest.paramsFormat, _twitchAuthParams.paramAppClientId, _twitchAuthParams.paramAppClientSecret, code, _twitchAuthParams.paramAuthorizationCode, _twitchAuthParams.paramRedirectUri);
+            string postUrl = _twitchAuthParams.getTokenRequest.endPoint + String.Format(_twitchAuthParams.getTokenRequest.paramsFormat, _twitchAuthParams.paramAppClientId, _twitchAuthParams.paramAppClientSecret, code, _twitchAuthParams.paramGetTokenGrantType, _twitchAuthParams.paramRedirectUri);
             Debug.Log("Url for POST request : " + postUrl);
 
             // make the call!
@@ -168,15 +163,17 @@ namespace GorasGames.Game.TwitchAPI
             // parse the return JSON into a more usable data object
             _accessTokenDatas = JsonUtility.FromJson<TwitchAccessTokenWithExpiration>(apiResponseJson);
             TwitchAPICallHelper.Instance.TwitchAuthToken = _accessTokenDatas.access_token;
+            
+            //Debug.Log("Player Prefs save tokens");
 
-            PlayerPrefs.SetString("AccessToken", _accessTokenDatas.access_token);
-            PlayerPrefs.SetString("RefreshToken", _accessTokenDatas.refresh_token);
-            PlayerPrefs.Save();
-
-            ValidateToken();
+            //PlayerPrefs.SetString("AccessToken", _accessTokenDatas.access_token);
+            //PlayerPrefs.SetString("RefreshToken", _accessTokenDatas.refresh_token);
+            //PlayerPrefs.Save();
+            
+            ValidateTokenAsync();
         }
 
-        private async void RefreshToken()
+        private async void RefreshTokenAsync()
         {
             Debug.Log("[TwitchAPIAuth] Refresh token");
             string postBody = String.Format(_twitchAuthParams.refreshTokenRequest.paramsFormat, _twitchAuthParams.paramAppClientId, _twitchAuthParams.paramAppClientSecret, UnityWebRequest.EscapeURL(PlayerPrefs.GetString("RefreshToken")));
@@ -192,7 +189,10 @@ namespace GorasGames.Game.TwitchAPI
             PlayerPrefs.SetString("RefreshToken", _refreshToken.refresh_token);
         }
 
-        private async void ValidateToken()
+        /// <summary>
+        /// Used to validate the token every <para>_validationDelay</para>
+        /// </summary>
+        private async void ValidateTokenAsync()
         {
             string response;
 

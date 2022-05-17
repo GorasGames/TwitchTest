@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c6b305be9ac2d0e4fb73cc9a18a96c12, type: 3}
+  m_Script: {fileID: 11500000, guid: 58858021d8190ed4db81638fb5304135, type: 3}
   m_Name: TwitchAuthParameters
   m_EditorClassIdentifier: 
   authorizeRequest:
@@ -22,17 +22,18 @@ MonoBehaviour:
     endPoint: https://id.twitch.tv/oauth2/validate?
     paramsFormat: 
   refreshTokenRequest:
-    endPoint: https://id.twitch.tv/oauth2/token
-    paramsFormat: client_id={0}&client_secret={1}&&grant_type=refresh_token&refresh_token={3}
+    endPoint: https://id.twitch.tv/oauth2/token?
+    paramsFormat: client_id={0}&client_secret={1}&grant_type={2}&refresh_token={3}
   paramAppClientId: g1gbfvo9bu0pfc080fmqlmrdc5vspt
   paramAppClientSecret: tlpjh7t9t2nwtmao10tn4sbmb5k6b8
   paramRedirectUri: http://localhost:3000/
-  paramAuthorizationCode: authorization_code
+  paramGetTokenGrantType: authorization_code
   scopes:
   - user:read:email
   - chat:edit
   - chat:read
   - channel:read:redemptions
-  - channel:read:subscriptions
+  - channel_subscriptions
   - user:read:broadcast
+  - user:edit:broadcast
   - channel:manage:redemptions
