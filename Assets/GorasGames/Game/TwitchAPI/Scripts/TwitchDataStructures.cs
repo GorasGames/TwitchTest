@@ -41,13 +41,19 @@ namespace GorasGames.Game.TwitchAPI
     }
 
     [Serializable]
-    public class TwitchAPIError: TwitchAPIMessage
+    public class TwitchAPIError : TwitchAPIMessage
     {
         public string error;
     }
 
     [Serializable]
-    public class TwitchUserDatas
+    public class TwitchUserData
+    {
+        public TwitchChannelInfos[] data;
+    }
+
+    [Serializable]
+    public class TwitchChannelInfos
     {
         public string broadcaster_type;
         public string description;
@@ -60,5 +66,10 @@ namespace GorasGames.Game.TwitchAPI
         public int view_count;
         public string email;
         public string created_at;
+
+        public override string ToString()
+        {
+            return "ID : " + id + " - login : " + login + " - display name : " + display_name;
+        }
     }
 }

@@ -1,12 +1,13 @@
 using GorasGames.Core.System;
 using GorasGames.Game.TwitchAPI;
 using System.Threading;
+using UnityEngine;
 
 namespace GorasGames.Game
 {
     public class AppManager : MonoSingleton<AppManager>
     {
-        TwitchUserDatas _userDatas;
+        TwitchChannelInfos _userDatas;
         CancellationTokenSource _cancelTokenSource;
 
         // Start is called before the first frame update
@@ -16,6 +17,8 @@ namespace GorasGames.Game
             TwitchAPIAuth.Instance.InitAsync(_cancelTokenSource);
 
             _userDatas = await TwitchAPIRequest.Instance.GetUserDatasAsync(_cancelTokenSource);
+            Debug.Log("User Datas : " + _userDatas.ToString());
+            TwitchIRCManager.Instance.Connect(_userDatas);
         }
 
         private new void OnApplicationQuit()

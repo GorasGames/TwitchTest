@@ -9,18 +9,24 @@ namespace GorasGames.Game.TwitchAPI
     {
         string getUserInfos = "https://api.twitch.tv/helix/users?";
 
-        public async Task<TwitchUserDatas> GetUserDatasAsync(CancellationTokenSource pCancellationToken)
+        /// <summary>
+        /// Get the streamer User Infos
+        /// </summary>
+        /// <param name="pCancellationToken"></param>
+        /// <returns></returns>
+        public async Task<TwitchChannelInfos> GetUserDatasAsync(CancellationTokenSource pCancellationToken)
         {
+            // Waiting for auth token available
             while(string.IsNullOrEmpty(TwitchAPICallHelper.Instance.TwitchAuthToken))
             {
-                Debug.Log("[TwitchAPIRequest] Waiting for auth...");
                 await Task.Delay(100, pCancellationToken.Token);
             }
-
+            // Call API to get user infos
             string result = await TwitchAPICallHelper.Instance.CallApiAsync(getUserInfos);
-
-            Debug.Log("[TwitchAPIRequest] Get User Infos : " + result);
-            return JsonUtility.FromJson<TwitchUserDatas>(result);
+            // Deserialize user infos
+            TwitchUserData userData = JsonUtility.FromJson<TwitchUserData>(result);
+            
+            return userData.data[0];
         }
     }
 }
